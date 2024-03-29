@@ -1,59 +1,95 @@
 import './App.css'
-import { Routes, Route, Link, useNavigate } from "react-router-dom"
-import Home from './pages/Home'
+import { useReducer, useRef } from 'react'
+import { Route, Routes, useNavigate } from "react-router-dom"
 import Diary from './pages/Diary'
+import Edit from './pages/Edit'
+import Home from './pages/Home'
 import New from './pages/New'
 import Notfound from './pages/Notfound'
 
-import emotion1 from './assets/emotion1.png'
-import emotion2 from './assets/emotion2.png'
-import emotion3 from './assets/emotion3.png'
-import emotion4 from './assets/emotion4.png'
-import emotion5 from './assets/emotion5.png'
+const mockData = [
+    {
+        id: 1,
+        createdDate: new Date().getTime(),
+        emotionId: 1,
+        content: "1번 일기 내용",
+    },
+    {
+        id: 2,
+        createdDate: new Date().getTime(),
+        emotionId: 2,
+        content: "2번 일기 내용",
+    }
+]
 
-// 1. "/" : 모든일기를 조회하는 index페이지
-// 2. "/new" : 새로운 일기를 작성하는 CREATE
-// 3. "/diary" : 일기를 상세조회하는 diary페이지
+function reducer(state, action) {
+    switch (action.type) {
+        case 'CREATE':
+            return [action.data, ...state]
+        case 'UPDATE':
+            return state.map((item) =>
+                String(item.id) === String(action.data.id)
+                    ? action.data
+                    : item
+            )
+    }
+}
 
 function App() {
 
-  const nav = useNavigate();
+    const [data, dispatch] = useReducer(reducer, mockData);
+    const idRef = useRef(3);
 
-  const onClickButton = () => {
-    nav('/new');
-  }
+    //새로운 일기 추가
+    const onCreate = (createdDate, emotionId, content) => {
+        dispatch({
+            type: "CREATE",
+            data: {
+                id: idRef.current++,
+                createdDate,
+                emotionId,
+                content
+            }
+        })
 
-  return (
-    <>
-      {/* <div>
-        <img src={"/emotion1.png"} alt="" />
-        <img src={"/emotion2.png"} alt="" />
-        <img src={"/emotion3.png"} alt="" />
-        <img src={"/emotion4.png"} alt="" />
-        <img src={"/emotion5.png"} alt="" />
-      </div> */}
+    }
+    //기존 일기 수정
+    const onUpdate = (id, createdDate, emotionId, content) => {
+        dispatch({
+            type: 'UPDATE',
+            data: {
+                id,
+                createdDate,
+                emotionId,
+                content
+            }
+        })
 
-      <div>
-        <img src={emotion1} alt="" />
-        <img src={emotion2} alt="" />
-        <img src={emotion3} alt="" />
-        <img src={emotion4} alt="" />
-        <img src={emotion5} alt="" />
-      </div>
-      <div>
-        <Link to={"/"}>Home</Link>
-        <Link to={"/new"}>New</Link>
-        <Link to={"/diary"}>Diary</Link>
-      </div>
-      <button onClick={onClickButton}>New페이지 이동</button>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/new" element={<New />} />
-        <Route path="/diary/:id" element={<Diary />} />
-        <Route path="*" element={<Notfound />} />
-      </Routes>
-    </>
-  )
+    }
+
+    return (
+        <>
+            <button onClick={() => {
+                onCreate(new Date().getTime(), 1, "HELLO")
+            }}>일기 추가 테스트</button>
+
+            <br />
+
+            <button
+                onClick={() => {
+                    onUpdate(1, new Date().getTime(), 3, "수정된 일기 내용입니다.")
+
+
+                }}>일기 수정 테스트</button>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/new" element={<New />} />
+                <Route path="/diary/:id" element={<Diary />} />
+                <Route path="/edit/:id" element={<Edit />} />
+                <Route path="*" element={<Notfound />} />
+            </Routes>
+        </>
+    )
 }
 
 export default App
